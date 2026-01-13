@@ -1,0 +1,72 @@
+from mbnpy import variable, cpm, inference
+import numpy as np
+
+# =============================================================================
+# 1) IMPORTS
+#    - mbnpy: builds and solves a Matrix Bayesian Network using CPMs
+#    - numpy: stores state tables (C) and probability vectors (p)
+# =============================================================================
+
+
+# =============================================================================
+# 2) DEFINE NETWORK VARIABLES (COMPONENTS + SYSTEM NODE)
+#    X1–X22 are component (segment) states: ['fail', 'success']
+#    S6 is a system-level node that depends on all component states.
+# =============================================================================
+varis = {}
+for i in range(1, 23):
+    varis[f"X{i}"] = variable.Variable(f"X{i}", ["fail", "success"])
+varis["S6"] = variable.Variable("S6", ["fail", "success"])
+
+
+# =============================================================================
+# 3) CREATE CPM STORAGE
+#    cpms holds the probability definitions (CPMs) for every node.
+# =============================================================================
+cpms = {}
+
+
+# =============================================================================
+# 4) COMPONENT PRIORS: P(Xi)
+#    Each component is assigned a marginal probability:
+#    - P(Xi=fail)
+#    - P(Xi=success)
+# =============================================================================
+cpms["X1"]  = cpm.Cpm([varis["X1"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.0,       1.0]))
+cpms["X2"]  = cpm.Cpm([varis["X2"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.16019883, 0.83980113]))
+cpms["X3"]  = cpm.Cpm([varis["X3"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.17662558, 0.82337442]))
+cpms["X4"]  = cpm.Cpm([varis["X4"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.17786053, 0.82213947]))
+cpms["X5"]  = cpm.Cpm([varis["X5"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.72886875, 0.27113125]))
+cpms["X6"]  = cpm.Cpm([varis["X6"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.29842259, 0.7015774 ]))
+cpms["X7"]  = cpm.Cpm([varis["X7"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.38271874, 0.6178122 ]))
+cpms["X8"]  = cpm.Cpm([varis["X8"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.63546645, 0.36453349]))
+cpms["X9"]  = cpm.Cpm([varis["X9"]],  no_child=1, C=np.array([[0],[1]], int), p=np.array([0.66273118, 0.33726878]))
+cpms["X10"] = cpm.Cpm([varis["X10"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.0746449,  0.92535511]))
+cpms["X11"] = cpm.Cpm([varis["X11"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.13282189, 0.86717802]))
+cpms["X12"] = cpm.Cpm([varis["X12"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.15821666, 0.84178315]))
+cpms["X13"] = cpm.Cpm([varis["X13"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.06967486, 0.93032495]))
+cpms["X14"] = cpm.Cpm([varis["X14"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.02925044, 0.97074942]))
+cpms["X15"] = cpm.Cpm([varis["X15"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.0543488,  0.94565097]))
+cpms["X16"] = cpm.Cpm([varis["X16"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.32299797, 0.6770585 ]))
+cpms["X17"] = cpm.Cpm([varis["X17"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.42785069, 0.57214917]))
+cpms["X18"] = cpm.Cpm([varis["X18"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.37899452, 0.62100532]))
+cpms["X19"] = cpm.Cpm([varis["X19"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.40498643, 0.59501335]))
+cpms["X20"] = cpm.Cpm([varis["X20"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.35676851, 0.64323124]))
+cpms["X21"] = cpm.Cpm([varis["X21"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.12655025, 0.87344949]))
+cpms["X22"] = cpm.Cpm([varis["X22"]], no_child=1, C=np.array([[0],[1]], int), p=np.array([0.01612399, 0.98387581]))
+
+
+# =============================================================================
+# 5) SYSTEM CPM STRUCTURE: P(S6 | X1..X22)
+#    C_S6 enumerates combinations of component states that define S6.
+#    any_state means “don’t care” (either fail or success is allowed).
+#    p_S6 assigns probability weights to each row (here all ones as a structure table).
+# =============================================================================
+any_state = varis["X1"].get_state({0, 1})  # special marker meaning {fail or success}
+
+C_S6 = np.array([
+    [0, 0, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state],
+    [0, 1, 0,         any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state],
+    [0, 1, 1,         0,         any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state],
+    [0, 1, 1,         1,         0,         any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state],
+    [0, 1, 1,         1,         1,         0,         any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any_state, any]()
